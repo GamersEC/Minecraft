@@ -11,7 +11,7 @@ Crea servidores de Minecraft Bedrock en sistemas Ubuntu/Debian con caracteristic
   <li>Reinicios automaticos según la hora que indiques</li>
   <li>Copias de seguridad automáticas cuando el servidor se reinicia</li>
   <li>Slot de jugadores configurable en las propiedades del servidor</li>
-  <li>Actualización manual del servidor para evitar incovenientes si juegan con versiónes piratas</li>
+  <li>Actualización manual del servidor para evitar incovenientes si juegan con versiónes no premium</li>
   <li>Agrega registro con marcas de tiempo al directorio "logs"</li>
   <li>Control facil con los scripts: <strong> iniciar.sh - detener.sh - reiniciar.sh - actualizarMC.sh</strong> </li>
 </ul>
