@@ -7,8 +7,8 @@
 #-------------------------------------------------------------------------------------
 
 # Instalar dependencias
-sudo apt-get update
-sudo apt-get install -y screen unzip wget
+#sudo apt-get update
+#sudo apt-get install -y screen unzip wget
 
 # Preguntar el nombre del servidor
 read -p "Introduce el nombre del servidor: " server_name
