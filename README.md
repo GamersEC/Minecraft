@@ -19,7 +19,7 @@ Crea servidores de Minecraft Bedrock en sistemas Ubuntu/Debian con caracteristic
 
 <h2>Instalación</h2>
 Ejecuta el siguiente comando para instalar el Servidor Dedicado:<br>
-<pre>curl https://raw.githubusercontent.com/Gamers-gq/ServidorBedrock/main/InstaladorMC.sh | bash</pre>
+<pre>curl https://raw.githubusercontent.com/Gamers-gq/Bedrock-Server/master/Instalador.sh | bash</pre>
 
 
 <h2>Guía de instalación</h2>
@@ -36,7 +36,7 @@ Ejecuta el siguiente comando para instalar el Servidor Dedicado:<br>
 <h2>Múltiples servidores</h2>
 <p>Cuando cree un nuevo servidor asegurese de cambiar los puertos de conexión y también de que estos esten agregados a su firewall</p>
 
-<p>Puede tener varios servidores a la vez ejecutando el InstaladorMC.sh nuevamente, solo elija un nombre que no haya usado anteriormente para crear la carpeta que contendra todos los archivos necesarios. La ruta de los scripts es $ROOTPATH/MinecraftBedrock/nombre_del_servidor</p>
+<p>Puede tener varios servidores a la vez ejecutando el Instalador.sh nuevamente, solo elija un nombre que no haya usado anteriormente para crear la carpeta que contendra todos los archivos necesarios.</p>
 
 <p>En caso de escribir un nombre existente este simplemente actualizara los scripts</p>
 
@@ -49,6 +49,8 @@ Ejecuta el siguiente comando para instalar el Servidor Dedicado:<br>
 
 <h2>Historial de actualizaciones</h2>
 <ul>
-  <li>28 de mayo de 2022</li>
-  ► Versión alfa del instalador
+  <li>28 de mayo del 2022</li>
+  ► Versión alfa 1.0.1 del instalador
+  <li>13 de marzo del 2023</li>
+  ► Versión alfa 1.0.2 del instalador
     </ul>
