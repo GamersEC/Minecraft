@@ -6,69 +6,123 @@
 # curl https://raw.githubusercontent.com/Gamers-gq/Bedrock-Server/master/Instalador.sh | bash
 #-------------------------------------------------------------------------------------
 
+
+# Comprobar si el usuario es root
+if [ "$EUID" -ne 0 ]
+  then echo "Por favor, ejecute el script como root"
+  exit
+fi
+
+# Comprobar y actualizar el sistema
+sudo apt-get update
+sudo apt-get upgrade -y
+
 # Instalar dependencias
-#sudo apt-get update
-#sudo apt-get install -y screen unzip wget
+sudo apt-get install -y curl screen unzip
 
-# Preguntar el nombre del servidor
-read -p "Introduce el nombre del servidor: " server_name
+# Establecer la hora y fecha según la zona America/Guayaquil
+sudo timedatectl set-timezone America/Guayaquil
 
-# Crear el directorio del servidor y acceder a él
-mkdir $server_name
-cd $server_name
+# Crear un directorio principal llamado "mcbe"
+sudo mkdir /mcbe
+sudo chown $USER:$USER /mcbe
 
-# Descargar la última versión de Minecraft Bedrock Server
-latest_url=$(wget -q -O - "https://www.minecraft.net/en-us/download/server/bedrock/" | grep -o 'https://minecraft.azureedge.net/bin-linux/[^"]*' | head -1)
-wget -q -O bedrock-server.zip $latest_url
-unzip -q bedrock-server.zip
+# Preguntar el nombre del servidor y crear un subdirectorio con el mismo nombre
+echo "Ingrese el nombre del servidor:"
+read SERVER_NAME
 
-# Preguntar los puertos a usar
-read -p "Introduce el puerto del servidor (19132 por defecto): " server_port
-if [ -z "$server_port" ]; then
-    server_port=19132
-fi
+sudo mkdir /mcbe/$SERVER_NAME
 
-read -p "Introduce el puerto RCON (19132 por defecto): " rcon_port
-if [ -z "$rcon_port" ]; then
-    rcon_port=19132
-fi
+# Comprobar y descargar la última versión del servidor de Minecraft Bedrock
+LATEST_VERSION=$(curl -s https://www.minecraft.net/en-us/download/server/bedrock/ | grep -oP 'https://minecraft.azureedge.net/bin-linux/[^"]+')
 
-# Preguntar las configuraciones del server.properties y guardarlas
-echo "Introduce las siguientes configuraciones del server.properties:"
+sudo curl -SL $LATEST_VERSION -o /mcbe/$SERVER_NAME/server.zip
+sudo unzip /mcbe/$SERVER_NAME/server.zip -d /mcbe/$SERVER_NAME/
+sudo rm /mcbe/$SERVER_NAME/server.zip
 
-read -p "Gamemode (0,1,2,3): " gamemode
-read -p "Difficulty (0,1,2,3): " difficulty
-read -p "Max players (1-100): " max_players
-read -p "Spawn protection (0-16): " spawn_protection
-read -p "Allow Cheats (true/false): " allow_cheats
-read -p "Player Idle Timeout (mins): " player_idle_timeout
-read -p "View Distance (6-48): " view_distance
+# Crear archivo de inicio del servicio
+cat <<EOF | sudo tee /etc/systemd/system/minecraft-bedrock.service
+[Unit]
+Description=Minecraft Bedrock Server
+After=network.target
 
-cat > server.properties <<EOL
-server-name=$server_name
-server-port=$server_port
-max-players=$max_players
-gamemode=$gamemode
-difficulty=$difficulty
-spawn-protection=$spawn_protection
-allow-cheats=$allow_cheats
-player-idle-timeout=$player_idle_timeout
-view-distance=$view_distance
-EOL
+[Service]
+User=$USER
+WorkingDirectory=/mcbe/$SERVER_NAME
+ExecStart=/bin/bash /mcbe/$SERVER_NAME/start.sh
+Restart=on-failure
 
-# Preguntar hora de reinicio y programarlo
-read -p "Introduce la hora en formato HH:MM (por defecto: 04:00): " backup_time
-if [ -z "$backup_time" ]; then
-    backup_time="04:00"
-fi
+[Install]
+WantedBy=multi-user.target
+EOF
 
-echo "Programando reinicio y copia de seguridad diaria a las $backup_time..."
-(crontab -l ; echo "0 $backup_time * * * /bin/bash /path/to/backup_script.sh") | crontab -
+# Habilitar el servicio y reiniciar systemd
+sudo systemctl daemon-reload
+sudo systemctl enable minecraft-bedrock
+sudo systemctl restart minecraft-bedrock
 
-# Esperar 30 segundos antes de iniciar el servidor
-echo "Esperando 30 segundos antes de iniciar el servidor..."
-sleep 30
+# Preguntar la hora de los reinicios automáticos
+echo "Ingrese la hora de los reinicios automáticos en formato HH:MM:"
+read RESTART_TIME
 
-# Iniciar el servidor
-screen -S $server_name -d -m ./bedrock_server
-echo "Servidor iniciado en segundo plano. Para ver la pantalla del servidor, ejecuta el comando 'screen -r $server_name'"
+# Crear script de reinicio automático
+cat <<EOF | sudo tee /mcbe/$SERVER_NAME/restart.sh
+#!/bin/bash
+sudo mkdir -p /mcbe/$SERVER_NAME/backups/
+sudo zip -r /mcbe/$SERVER_NAME/backups/\$(date +'%Y-%m-%d_%H-%M-%S').zip /mcbe/$SERVER
+
+# Preguntar las configuraciones del archivo server.properties
+echo "Ingrese el nombre del mundo:"
+read LEVEL_NAME
+
+echo "Ingrese el número máximo de jugadores:"
+read MAX_PLAYERS
+
+echo "Ingrese la dificultad del mundo (0: Peaceful, 1: Easy, 2: Normal, 3: Hard):"
+read DIFFICULTY
+
+echo "Ingrese el modo de juego (0: survival, 1: creative, 2: adventure):"
+read GAME_MODE
+
+# Configurar el archivo server.properties
+cat <<EOF | sudo tee /mcbe/$SERVER_NAME/server.properties
+server-name=$SERVER_NAME
+gamemode=$GAME_MODE
+difficulty=$DIFFICULTY
+max-players=$MAX_PLAYERS
+level-name=$LEVEL_NAME
+allow-cheats=false
+enable-query=false
+enable-rcon=false
+rcon.password=
+server-port=19132
+texturepack-required=false
+EOF
+
+# Crear un registro con marcas de tiempo y guardarlas en una carpeta llamada "logs"
+sudo mkdir /mcbe/$SERVER_NAME/logs
+cat <<EOF | sudo tee /mcbe/$SERVER_NAME/start.sh
+#!/bin/bash
+cd /mcbe/$SERVER_NAME/
+echo "[$(date)] Iniciando servidor..." >> logs/server.log
+LD_LIBRARY_PATH=. ./bedrock_server >> logs/server.log
+EOF
+
+# Crear script para detener el servidor
+cat <<EOF | sudo tee /mcbe/$SERVER_NAME/stop.sh
+#!/bin/bash
+cd /mcbe/$SERVER_NAME/
+echo "[$(date)] Deteniendo servidor..." >> logs/server.log
+screen -S $SERVER_NAME -X stuff "stop^M"
+sleep 10s
+sudo zip -r /mcbe/$SERVER_NAME/backups/\$(date +'%Y-%m-%d_%H-%M-%S').zip /mcbe/$SERVER_NAME/
+EOF
+
+# Crear script para actualizar el servidor
+cat <<EOF | sudo tee /mcbe/$SERVER_NAME/update.sh
+#!/bin/bash
+cd /mcbe/$SERVER_NAME/
+echo "[$(date)] Deteniendo servidor..." >> logs/server.log
+screen -S $SERVER_NAME -X stuff "stop^M"
+sleep 10s
+sudo zip -r /mcbe/$SERVER_NAME/backups/\$(date +'%Y-%m-%d_%H-%M-%S').zip /mcbe/$SERVER_NAME/
