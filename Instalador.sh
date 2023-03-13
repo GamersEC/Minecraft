@@ -7,122 +7,67 @@
 #-------------------------------------------------------------------------------------
 
 
-# Comprobar si el usuario es root
-if [ "$EUID" -ne 0 ]
-  then echo "Por favor, ejecute el script como root"
-  exit
-fi
-
-# Comprobar y actualizar el sistema
+# 1. Actualizar e instalar dependencias
 sudo apt-get update
 sudo apt-get upgrade -y
+sudo apt-get install -y wget screen unzip
 
-# Instalar dependencias
-sudo apt-get install -y curl screen unzip
-
-# Establecer la hora y fecha según la zona America/Guayaquil
+# 2. Establecer la hora y fecha
 sudo timedatectl set-timezone America/Guayaquil
 
-# Crear un directorio principal llamado "mcbe"
+# 3. Crear directorio principal
 sudo mkdir /mcbe
-sudo chown $USER:$USER /mcbe
 
-# Preguntar el nombre del servidor y crear un subdirectorio con el mismo nombre
-echo "Ingrese el nombre del servidor:"
-read SERVER_NAME
+# 4. Preguntar el nombre del servidor y crear subdirectorio
+read -p "Ingresa el nombre del servidor: " server_name
+sudo mkdir /mcbe/$server_name
 
-sudo mkdir /mcbe/$SERVER_NAME
+# 5. Descargar última versión de Minecraft Bedrock
+cd /mcbe/$server_name
+sudo wget -O bedrock-server.zip https://minecraft.net/en-us/download/server/bedrock
+sudo unzip bedrock-server.zip
+sudo chmod +x bedrock_server
 
-# Comprobar y descargar la última versión del servidor de Minecraft Bedrock
-LATEST_VERSION=$(curl -s https://www.minecraft.net/en-us/download/server/bedrock/ | grep -oP 'https://minecraft.azureedge.net/bin-linux/[^"]+')
+# 6. Iniciar automáticamente en el inicio del sistema
+echo "@reboot cd /mcbe/$server_name && ./start.sh" | crontab -
 
-sudo curl -SL $LATEST_VERSION -o /mcbe/$SERVER_NAME/server.zip
-sudo unzip /mcbe/$SERVER_NAME/server.zip -d /mcbe/$SERVER_NAME/
-sudo rm /mcbe/$SERVER_NAME/server.zip
+# 7. Programar reinicio y copia de seguridad
+read -p "Ingresa la hora (en formato HH:MM) en la que se hará el reinicio diario: " restart_time
+mkdir backups
+echo "$restart_time * * * cd /mcbe/$server_name && ./stop.sh" | crontab -
+echo "$restart_time * * * cd /mcbe/$server_name && cp -r world backups/world-$(date +%F-%H-%M-%S)" | crontab -
 
-# Crear archivo de inicio del servicio
-cat <<EOF | sudo tee /etc/systemd/system/minecraft-bedrock.service
-[Unit]
-Description=Minecraft Bedrock Server
-After=network.target
+# 8. Configurar archivo server.properties
+read -p "Ingresa el valor para max-players (valor predeterminado 10): " max_players
+echo "max-players=$max_players" >> server.properties
 
-[Service]
-User=$USER
-WorkingDirectory=/mcbe/$SERVER_NAME
-ExecStart=/bin/bash /mcbe/$SERVER_NAME/start.sh
-Restart=on-failure
+# 9. Crear carpeta de registros
+mkdir logs
 
-[Install]
-WantedBy=multi-user.target
-EOF
+# 10. Crear script start.sh
+echo "#!/bin/bash
+cd /mcbe/$server_name
+screen -S $server_name -d -m ./bedrock_server" > start.sh
+chmod +x start.sh
 
-# Habilitar el servicio y reiniciar systemd
-sudo systemctl daemon-reload
-sudo systemctl enable minecraft-bedrock
-sudo systemctl restart minecraft-bedrock
+# 11. Crear script stop.sh
+echo "#!/bin/bash
+cd /mcbe/$server_name
+screen -S $server_name -p 0 -X stuff 'stop\n'
+sleep 10
+cp -r world backups/world-$(date +%F-%H-%M-%S)" > stop.sh
+chmod +x stop.sh
 
-# Preguntar la hora de los reinicios automáticos
-echo "Ingrese la hora de los reinicios automáticos en formato HH:MM:"
-read RESTART_TIME
+# 12. Crear script update.sh
+echo "#!/bin/bash
+cd /mcbe/$server_name
+./stop.sh
+wget -O bedrock-server.zip https://minecraft.net/en-us/download/server/bedrock
+sudo unzip bedrock-server.zip
+rm bedrock-server.zip
+./start.sh" > update.sh
+chmod +x update.sh
 
-# Crear script de reinicio automático
-cat <<EOF | sudo tee /mcbe/$SERVER_NAME/restart.sh
-#!/bin/bash
-sudo mkdir -p /mcbe/$SERVER_NAME/backups/
-sudo zip -r /mcbe/$SERVER_NAME/backups/\$(date +'%Y-%m-%d_%H-%M-%S').zip /mcbe/$SERVER
-
-# Preguntar las configuraciones del archivo server.properties
-echo "Ingrese el nombre del mundo:"
-read LEVEL_NAME
-
-echo "Ingrese el número máximo de jugadores:"
-read MAX_PLAYERS
-
-echo "Ingrese la dificultad del mundo (0: Peaceful, 1: Easy, 2: Normal, 3: Hard):"
-read DIFFICULTY
-
-echo "Ingrese el modo de juego (0: survival, 1: creative, 2: adventure):"
-read GAME_MODE
-
-# Configurar el archivo server.properties
-cat <<EOF | sudo tee /mcbe/$SERVER_NAME/server.properties
-server-name=$SERVER_NAME
-gamemode=$GAME_MODE
-difficulty=$DIFFICULTY
-max-players=$MAX_PLAYERS
-level-name=$LEVEL_NAME
-allow-cheats=false
-enable-query=false
-enable-rcon=false
-rcon.password=
-server-port=19132
-texturepack-required=false
-EOF
-
-# Crear un registro con marcas de tiempo y guardarlas en una carpeta llamada "logs"
-sudo mkdir /mcbe/$SERVER_NAME/logs
-cat <<EOF | sudo tee /mcbe/$SERVER_NAME/start.sh
-#!/bin/bash
-cd /mcbe/$SERVER_NAME/
-echo "[$(date)] Iniciando servidor..." >> logs/server.log
-LD_LIBRARY_PATH=. ./bedrock_server >> logs/server.log
-EOF
-
-# Crear script para detener el servidor
-cat <<EOF | sudo tee /mcbe/$SERVER_NAME/stop.sh
-#!/bin/bash
-cd /mcbe/$SERVER_NAME/
-echo "[$(date)] Deteniendo servidor..." >> logs/server.log
-screen -S $SERVER_NAME -X stuff "stop^M"
-sleep 10s
-sudo zip -r /mcbe/$SERVER_NAME/backups/\$(date +'%Y-%m-%d_%H-%M-%S').zip /mcbe/$SERVER_NAME/
-EOF
-
-# Crear script para actualizar el servidor
-cat <<EOF | sudo tee /mcbe/$SERVER_NAME/update.sh
-#!/bin/bash
-cd /mcbe/$SERVER_NAME/
-echo "[$(date)] Deteniendo servidor..." >> logs/server.log
-screen -S $SERVER_NAME -X stuff "stop^M"
-sleep 10s
-sudo zip -r /mcbe/$SERVER_NAME/backups/\$(date +'%Y-%m-%d_%H-%M-%S').zip /mcbe/$SERVER_NAME/
+# Mensaje de finalización
+echo "La instalación se ha completado exitosamente. Para ingresar a la pantalla del servidor, ejecuta el siguiente comando:"
+echo "screen -r $server_name"
