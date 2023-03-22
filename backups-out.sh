@@ -1,7 +1,7 @@
 #!/bin/bash
 #Autor: Marcus Mayorga
 # Este Script sirve para crear una copia de seguridad de los mundos y las propiedades del servidor a una unidad remota de rclone
-
+# Este Script requiere tener instalado zip para crear los archivos de backups
 
 # Rutas de los archivos a respaldar
 origen_carpeta="/home/ubuntu/minecraftbe/Personal/worlds"
