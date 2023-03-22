@@ -12,8 +12,7 @@ origen_archivo2="/home/ubuntu/minecraftbe/Personal/allowlist.json"
 destino="/home/ubuntu/GamersCloud/GamersCloud/Servidor_Marcus"
 
 # Nombre del archivo de respaldo
-nombre_archivo="$(date +"%Y%m%d%H%M%S").tar.gz"
-nombre_archivo="Backup_$(date +"%d-%m-%Y_%H:%M").tar.gz"
+nombre_archivo="Backup_$(date +"%d-%m-%Y_%H;%M").zip"
 
 # Crear la carpeta de destino si no existe
 mkdir -p "$destino"
@@ -29,8 +28,8 @@ else
 fi
 
 # Verificar si hay más de 5 archivos de copia de seguridad y eliminar los más antiguos
-cantidad_copias=$(ls -1 "$destino"/*.tar.gz | wc -l)
+cantidad_copias=$(ls -1 "$destino"/*.zip | wc -l)
 if [ "$cantidad_copias" -gt 5 ]; then
   cantidad_eliminar=$(expr $cantidad_copias - 5)
-  ls -1tr "$destino"/*.tar.gz | head -n $cantidad_eliminar | xargs rm -f
+  ls -1tr "$destino"/*.zip | head -n $cantidad_eliminar | xargs rm -f
 fi
