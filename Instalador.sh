@@ -2,6 +2,7 @@
 # Autor: Marcus Mayorga
 
 #-------------------------------------------------------------------------------------
+# Script en desarrollo
 # Este Script instala un servidor de Minecraft Bedrock dentro una instancia con Ubuntu
 # curl https://raw.githubusercontent.com/Gamers-gq/Bedrock-Server/master/Instalador.sh | bash
 #-------------------------------------------------------------------------------------
