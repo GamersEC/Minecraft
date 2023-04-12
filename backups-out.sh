@@ -10,7 +10,7 @@ origen_archivo1="/home/ubuntu/minecraftbe/MarcusGamer/server.properties"
 origen_archivo2="/home/ubuntu/minecraftbe/MarcusGamer/allowlist.json"
 
 # Ruta de la carpeta remota donde se creara el backup
-destino="/home/ubuntu/Cloud/GamersEC/MarcusGamer"
+destino="/home/ubuntu/Cloud/GamersEC/MarcusGamer/Backups"
 
 # Nombre del archivo de respaldo
 nombre_archivo="BAK_$(date +"%d-%m-%Y_%H-%M").zip"
