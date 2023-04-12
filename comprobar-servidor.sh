@@ -1,5 +1,5 @@
 #!/bin/bash
-#Autor: Marcus Mayorga
+# Autor: Marcus Mayorga
 
 while true; do
 
