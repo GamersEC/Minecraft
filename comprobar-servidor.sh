@@ -17,4 +17,4 @@ else
 echo "El servidor de Minecraft Bedrock está activo."
 fi
 sleep 90
-done
+done &
