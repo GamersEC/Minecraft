@@ -2,7 +2,7 @@
 #Autor: Marcus Mayorga
 # Este Script crea una copia de seguridad de los mundos y las propiedades del servidor a una unidad remota de rclone
 # Este Script requiere tener instalado zip para crear los archivos de backups
-# Para que el script se ejecute cada 6 horas --> "0 */6 * * * /ruta/completa/al/archivo/backup.sh"
+# Para que el script se ejecute cada 6 horas añadir la siguiente linea a crontab --> "0 */6 * * * /ruta/completa/al/archivo/backup.sh"
 
 # Rutas de los archivos a respaldar
 origen_carpeta="/home/ubuntu/minecraftbe/MarcusGamer/worlds"
