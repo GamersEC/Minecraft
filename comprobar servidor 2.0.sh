@@ -10,4 +10,5 @@ do
        echo "Minecraft Server se ha detenido. Iniciando..."
        /home/ubuntu/minecraftbe/MarcusGamer/start.sh
    fi
+   sleep 10
 done
