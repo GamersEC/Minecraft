@@ -16,5 +16,5 @@ else
   cd "$ubicacion" && "$comando"
 echo "El servidor de Minecraft Bedrock está activo."
 fi
-sleep 40
-done &
+sleep 90
+done
