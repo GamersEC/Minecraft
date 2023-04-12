@@ -1,18 +1,19 @@
 #!/bin/bash
 #Autor: Marcus Mayorga
-# Este Script sirve para crear una copia de seguridad de los mundos y las propiedades del servidor a una unidad remota de rclone
+# Este Script crea una copia de seguridad de los mundos y las propiedades del servidor a una unidad remota de rclone
 # Este Script requiere tener instalado zip para crear los archivos de backups
+# Para que el script se ejecute cada 6 horas --> "0 */6 * * * /ruta/completa/al/archivo/backup.sh"
 
 # Rutas de los archivos a respaldar
-origen_carpeta="/home/ubuntu/minecraftbe/Personal/worlds"
-origen_archivo1="/home/ubuntu/minecraftbe/Personal/server.properties"
-origen_archivo2="/home/ubuntu/minecraftbe/Personal/allowlist.json"
+origen_carpeta="/home/ubuntu/minecraftbe/MarcusGamer/worlds"
+origen_archivo1="/home/ubuntu/minecraftbe/MarcusGamer/server.properties"
+origen_archivo2="/home/ubuntu/minecraftbe/MarcusGamer/allowlist.json"
 
 # Ruta de la carpeta remota donde se creara el backup
-destino="/home/ubuntu/GamersCloud/GamersCloud/Servidor_Marcus"
+destino="/home/ubuntu/Cloud/GamersEC/MarcusGamer"
 
 # Nombre del archivo de respaldo
-nombre_archivo="Backup_$(date +"%d-%m-%Y_%H;%M").zip"
+nombre_archivo="BAK_$(date +"%d-%m-%Y_%H-%M").zip"
 
 # Crear la carpeta de destino si no existe
 mkdir -p "$destino"
